@@ -152,8 +152,8 @@ summary_table <- bind_rows(
   alc_base %>%
     mutate(
       coa_label = case_when(
-        coa == "0" ~ "No parental alcoholism",
-        coa == "1" ~ "Parental alcoholism",
+        coa == "0" ~ "No",
+        coa == "1" ~ "Yes",
         TRUE ~ as.character(coa)
       )
     ) %>%
