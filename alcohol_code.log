@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.9.1)  7 MAR 2026 23:57
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.9.1)  8 MAR 2026 00:02
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -895,11 +895,11 @@ File: alcohol_code_files/figure-latex/unnamed-chunk-5-1.pdf Graphic file (type p
 [6]
 
 [7]
-Underfull \vbox (badness 10000) detected at line 538
+Underfull \vbox (badness 10000) detected at line 540
  []
 
 
-Underfull \vbox (badness 10000) detected at line 538
+Underfull \vbox (badness 10000) detected at line 540
  []
 
 
@@ -913,11 +913,15 @@ LaTeX Warning: `!h' float specifier changed to `!ht'.
 
 
 [10]
-File: alcohol_code_files/figure-latex/unnamed-chunk-10-1.pdf Graphic file (type pdf)
-<use alcohol_code_files/figure-latex/unnamed-chunk-10-1.pdf>
+Underfull \vbox (badness 7238) detected at line 728
+ []
+
 
 
 [11]
+File: alcohol_code_files/figure-latex/unnamed-chunk-10-1.pdf Graphic file (type pdf)
+<use alcohol_code_files/figure-latex/unnamed-chunk-10-1.pdf>
+
 
 [12]
 File: alcohol_code_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (type pdf)
@@ -925,7 +929,7 @@ File: alcohol_code_files/figure-latex/unnamed-chunk-11-1.pdf Graphic file (type 
 
 
 [13]
-Underfull \vbox (badness 10000) detected at line 848
+Underfull \vbox (badness 10000) detected at line 851
  []
 
 
@@ -948,6 +952,6 @@ Here is how much of TeX's memory you used:
  42914 multiletter control sequences out of 15000+600000
  564586 words of font info for 85 fonts, out of 8000000 for 9000
  36 hyphenation exceptions out of 8191
- 90i,9n,123p,1009b,375s stack positions out of 10000i,1000n,20000p,200000b,200000s
+ 90i,9n,123p,1009b,377s stack positions out of 10000i,1000n,20000p,200000b,200000s
 
 Output written on alcohol_code.pdf (15 pages).

@@ -236,7 +236,8 @@ p_peer_age_coa <- ggplot(alc, aes(x = peer, y = alcuse, color = coa)) +
     color = "Parental alcoholism"
   ) +
   scale_color_manual(
-    values = coa_cols
+    values = coa_cols,
+    labels = c("No", "Yes")
   ) +
   base_plot_theme
 
@@ -263,7 +264,8 @@ ggplot(alc, aes(x = age, y = alcuse, group = id, color = coa)) +
     geom = "line",
     linewidth = 1.5
   ) +
-  scale_color_manual(values = coa_cols, name = "Parental alcoholism") +
+  scale_color_manual(values = coa_cols, labels = c("No", "Yes"), 
+                     name = "Parental alcoholism") +
   labs(
     title = "Alcohol use trajectories by parental alcoholism",
     x = "Age",
@@ -504,7 +506,8 @@ ggplot(
     linewidth = 1.8,
     inherit.aes = FALSE
   ) +
-  scale_color_manual(values = coa_cols, name = "Parental alcoholism") +
+  scale_color_manual(values = coa_cols, labels = c("No", "Yes"), 
+                     name = "Parental alcoholism") +
   labs(
     title = "Predicted conditional and marginal mean alcohol-use trajectories",
     x = "Age",
