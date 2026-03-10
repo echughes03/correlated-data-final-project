@@ -278,67 +278,22 @@ ggplot(alc, aes(x = age, y = alcuse, group = id, color = coa)) +
 ## Model comparison
 
 ```{r}
-m_mean1 <- lme( # mean effect model
-  alcuse ~ age + coa + peer,
-  random = ~ 1 | id,
-  data = alc,
-  method = "ML"
-)
-
-m_mean2 <- lme( # two way interation model
-  alcuse ~ age + coa + peer + age:coa + age:peer + coa:peer,
-  random = ~ 1 | id,
-  data = alc,
-  method = "ML"
-)
-
-m_mean3 <- lme( # three way interaction model
-  alcuse ~ age * coa * peer,
-  random = ~ 1 | id,
-  data = alc,
-  method = "ML"
-)
-
-# model comparison using anova()
-mean_model_compare <- anova(m_mean1, m_mean2, m_mean3) %>% 
-  as.data.frame() %>%
-  mutate(
-    Model = c(
-      "Main effects",
-      "Main effects + two-way interactions",
-      "Main effects + two-way + three-way interaction"
-    )
-  ) %>%
-  select(Model, df, logLik, `L.Ratio`, `p-value`) %>%
-  mutate(across(where(is.numeric), ~ round(.x, 3)))
-
-rownames(mean_model_compare) <- NULL
-
-# writing the model output into a table
-paper_kable(
-  mean_model_compare,
-  "Likelihood ratio tests for fixed-effects structure selection"
-)
-```
-Three way interaction is the best.
-
-```{r}
 m1 <- lme( # random intercept + ind errors model
-  alcuse ~ age * coa * peer,
+  alcuse ~ age * coa * peer * male,
   random = ~ 1 | id,
   data = alc,
   method = "REML"
 )
 
 m2 <- lme( # random intercept and slopes + ind errors model
-  alcuse ~ age * coa * peer,
+  alcuse ~ age * coa * peer * male,
   random = ~ age | id,
   data = alc,
   method = "REML"
 )
 
 m3 <- lme( # random intercept + AR1 errors model
-  alcuse ~ age * coa * peer,
+  alcuse ~ age * coa * peer * male,
   random = ~ 1 | id,
   correlation = corAR1(form = ~ age | id),
   data = alc,
@@ -346,7 +301,7 @@ m3 <- lme( # random intercept + AR1 errors model
 )
 
 m4 <- lme( # random intercept + exp errors model
-  alcuse ~ age * coa * peer,
+  alcuse ~ age * coa * peer * male,
   random = ~ 1 | id,
   correlation = corExp(form = ~ age | id),
   data = alc,
@@ -354,7 +309,7 @@ m4 <- lme( # random intercept + exp errors model
 )
 
 m5 <- lme( # random intercept + heteroske ind errors (age) model
-  alcuse ~ age * coa * peer,
+  alcuse ~ age * coa * peer * male,
   random = ~ 1 | id,
   weights = varIdent(form = ~ 1 | age),
   data = alc,
@@ -362,7 +317,7 @@ m5 <- lme( # random intercept + heteroske ind errors (age) model
 )
 
 m6 <- lme( # random intercept + heteroske ind errors (gender) model
-  alcuse ~ age * coa * peer,
+  alcuse ~ age * coa * peer * male,
   random = ~ 1 | id,
   weights = varIdent(form = ~ 1 | male),
   data = alc,
@@ -392,53 +347,135 @@ paper_kable(cov_table, "Comparison of covariance structures")
 Random intercept and slope model is the best.
 
 ```{r}
-model_slope <- lme( # model without controlling for gender
+m_mean1 <- lme( # mean effect model
+  alcuse ~ age + coa + peer,
+  random = ~ age | id,
+  data = alc,
+  method = "ML"
+)
+
+m_mean2 <- lme( # mean effect model with gender
+  alcuse ~ age + coa + peer + male,
+  random = ~ age | id,
+  data = alc,
+  method = "ML"
+)
+
+m_mean3 <- lme( # two way interaction model 
+  alcuse ~ age + coa + peer + age:coa + age:peer + coa:peer,
+  random = ~ age | id,
+  data = alc,
+  method = "ML"
+)
+
+m_mean4 <- lme( # two way interaction model with gender
+  alcuse ~ age + coa + peer + male + age:coa + age:peer + coa:peer + male:age + male:peer + male:coa,
+  random = ~ age | id,
+  data = alc,
+  method = "ML"
+)
+
+m_mean5 <- lme( # three way interaction model
   alcuse ~ age * coa * peer,
   random = ~ age | id,
   data = alc,
   method = "ML"
 )
 
-model_gender <- lme( # model controlling for gender
-  alcuse ~ age * coa * peer + male,
+m_mean6 <- lme( # three way interaction model with gender
+  alcuse ~ age * coa * peer * male,
   random = ~ age | id,
   data = alc,
   method = "ML"
 )
+```
 
-gender_compare <- anova(model_slope, model_gender) %>% # compare using anova()
+```{r}
+# without gender model comparison using anova()
+mean_model_compare <- anova(m_mean1, m_mean3, m_mean5) %>% 
   as.data.frame() %>%
   mutate(
-    Model = c("Without gender", "With gender")
+    Model = c(
+      "Main effects",
+      "Main effects + two-way interactions",
+      "Main effects + two-way + three-way interaction"
+    )
   ) %>%
-  select(
-    Model,
-    df,
-    AIC,
-    BIC,
-    logLik,
-    `L.Ratio`,
-    `p-value`
-  ) %>%
-  mutate(
-    across(where(is.numeric), ~ round(.x, 3))
-  ) 
+  select(Model, df, logLik, `L.Ratio`, `p-value`) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 3)))
 
-rownames(gender_compare) <- NULL
+rownames(mean_model_compare) <- NULL
 
-# write into a table
+# writing the model output into a table
 paper_kable(
-  gender_compare,
-  "Likelihood ratio test comparing models with and without gender"
+  mean_model_compare,
+  "Likelihood ratio tests for fixed-effects structure selection without gender"
 )
 ```
-Gender is not significant.
+
+For without gender, three way interaction is the best.
+
+```{r}
+# with gender model comprison using anova()
+mean_model_compare <- anova(m_mean2, m_mean4, m_mean6) %>% 
+  as.data.frame() %>%
+  mutate(
+    Model = c(
+      "Main effects",
+      "Main effects + two-way interactions",
+      "Main effects + two-way + three-way interaction"
+    )
+  ) %>%
+  select(Model, df, logLik, `L.Ratio`, `p-value`) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 3)))
+
+rownames(mean_model_compare) <- NULL
+
+# writing the model output into a table
+paper_kable(
+  mean_model_compare,
+  "Likelihood ratio tests for fixed-effects structure selection with gender"
+)
+```
+
+For with gender, two way interaction is the best.
+
+```{r}
+# AIC and BIC to compare the two models
+mean_table <- tibble(
+  `Mean model` = c(
+    "Two-way interactions + gender",
+    "Three-way interaction"
+  ),
+  AIC = c(
+    AIC(m_mean4), AIC(m_mean5)
+  ),
+  BIC = c(
+    BIC(m_mean4), BIC(m_mean5)
+  )
+) %>%
+  mutate(
+    AIC = round(AIC, 3),
+    BIC = round(BIC, 3)
+  )
+
+paper_kable(mean_table, "Model Comparison")
+```
+
+Three way interaction without gender is the best.
 
 ## Final model
 
 ```{r}
+final_model <- lme( # model without controlling for gender
+  alcuse ~ age * coa * peer,
+  random = ~ age | id,
+  data = alc,
+  method = "REML"
+)
+
 # print the result of the chosen model: three way interaction model
-coef_table <- summary(model_slope)$tTable %>%
+coef_table <- summary(final_model)$tTable %>%
   as.data.frame() %>%
   rownames_to_column("Variable") %>%
   rename(
@@ -476,7 +513,7 @@ paper_kable(
 
 ```{r fig.width=7, fig.height=5}
 # compute conditional predicted values from the final model
-condmean <- predict(model_slope, level = 1)
+condmean <- predict(final_model, level = 1)
 
 # compute the mean peer alcohol use
 peer0 <- mean(alc$peer, na.rm = TRUE)
@@ -489,7 +526,7 @@ margdat <- expand.grid(
 )
 
 # compute marginal predicted mean alcohol use
-margdat$margmean <- predict(model_slope, newdata = margdat, level = 0)
+margdat$margmean <- predict(final_model, newdata = margdat, level = 0)
 
 # combine predicted values with the original dataset
 predalc <- as.data.frame(cbind(alc, condmean))
@@ -519,9 +556,9 @@ ggplot(
 ## Model diagnostic
 
 ```{r, fig.width=8, fig.height=6, warning=FALSE, message=FALSE}
-rhat <- resid(model_slope, type = "normalized")
+rhat <- resid(final_model, type = "normalized")
 
-condmean <- predict(model_slope)
+condmean <- predict(final_model)
 y <- alc$alcuse
 stg1r <- y - condmean
 
@@ -556,7 +593,7 @@ p2 <- ggplot(data.frame(rhat = rhat), aes(sample = rhat)) +
   ) +
   base_plot_theme
 
-yhat <- predict(model_slope)
+yhat <- predict(final_model)
 
 p3 <- ggplot(data.frame(yhat = yhat, rhat = rhat), aes(y = rhat, x = yhat)) +
   geom_point(shape = 1) +
@@ -584,7 +621,7 @@ p4 <- alc %>%
 ```
 
 ```{r, fig.width=8, fig.height=6, warning=FALSE, message=FALSE}
-re <- ranef(model_slope) %>%
+re <- ranef(final_model) %>%
   rownames_to_column("id")
 
 b0hat <- re$`(Intercept)`
