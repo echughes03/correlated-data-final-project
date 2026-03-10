@@ -443,7 +443,7 @@ For with gender, two way interaction is the best.
 ```{r}
 # AIC and BIC to compare the two models
 mean_table <- tibble(
-  `Mean model` = c(
+  `Model` = c(
     "Two-way interactions + gender",
     "Three-way interaction"
   ),
