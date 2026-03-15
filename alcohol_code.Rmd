@@ -467,6 +467,17 @@ final_model_int_slope <- lme( # three way interaction model
   data = alc,
   method = "ML"
 )
+
+# Try a knot at age 15 (change in slope on trajectory plots)
+final_model_int_slope_knot <- lme(
+  alcuse ~ age * coa * peer + age15*coa*peer,
+  random = ~ age | id,
+  data = alc %>% mutate(age15 = I(age >=15)),
+  method = "ML"
+)
+
+anova(final_model_int_slope_knot, final_model_int_slope)
+# Non-significant - continue without a knot
 ```
 
 
@@ -725,6 +736,7 @@ final_model_ar1 <- lme( # three way interaction model
   data = alc,
   method = "ML"
 )
+
 rhat <- resid(final_model_ar1, type = "normalized")
 
 condmean <- predict(final_model_ar1)
