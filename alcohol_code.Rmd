@@ -300,15 +300,8 @@ m3 <- lme( # random intercept + AR1 errors model
   method = "REML"
 )
 
-m4 <- lme( # random intercept + exp errors model
-  alcuse ~ age * coa * peer * male,
-  random = ~ 1 | id,
-  correlation = corExp(form = ~ age | id),
-  data = alc,
-  method = "REML"
-)
 
-m5 <- lme( # random intercept + heteroske ind errors (age) model
+m4 <- lme( # random intercept + heteroske ind errors (age) model
   alcuse ~ age * coa * peer * male,
   random = ~ 1 | id,
   weights = varIdent(form = ~ 1 | age),
@@ -316,7 +309,7 @@ m5 <- lme( # random intercept + heteroske ind errors (age) model
   method = "REML"
 )
 
-m6 <- lme( # random intercept + heteroske ind errors (gender) model
+m5 <- lme( # random intercept + heteroske ind errors (gender) model
   alcuse ~ age * coa * peer * male,
   random = ~ 1 | id,
   weights = varIdent(form = ~ 1 | male),
@@ -329,12 +322,11 @@ cov_table <- tibble(
     "Random intercepts + independent errors",
     "Random intercepts and slopes + independent errors",
     "Random intercepts + AR(1) errors",
-    "Random intercepts + exponential errors",
     "Random intercepts + heteroskedastic independent errors by age",
     "Random intercepts + heteroskedastic independent errors by gender"
   ),
-  AIC = c(AIC(m1), AIC(m2), AIC(m3), AIC(m4), AIC(m5), AIC(m6)),
-  BIC = c(BIC(m1), BIC(m2), BIC(m3), BIC(m4), BIC(m5), BIC(m6))
+  AIC = c(AIC(m1), AIC(m2), AIC(m3), AIC(m4), AIC(m5)),
+  BIC = c(BIC(m1), BIC(m2), BIC(m3), BIC(m4), BIC(m5))
 ) %>%
   mutate(
     AIC = round(AIC, 3),
@@ -345,6 +337,10 @@ paper_kable(cov_table, "Comparison of covariance structures")
 ```
 
 Random intercept and slope model is the best.
+
+# Random intercept and slope model
+
+## Fixed effect model selection
 
 ```{r}
 m_mean1 <- lme( # mean effect model
@@ -464,102 +460,22 @@ paper_kable(mean_table, "Model Comparison")
 
 Three way interaction without gender is the best.
 
-## Final model
-
 ```{r}
-final_model <- lme( # model without controlling for gender
+final_model_int_slope <- lme( # three way interaction model
   alcuse ~ age * coa * peer,
   random = ~ age | id,
   data = alc,
-  method = "REML"
+  method = "ML"
 )
-
-
-# print the result of the chosen model: three way interaction model
-coef_table <- summary(final_model)$tTable %>%
-  as.data.frame() %>%
-  rownames_to_column("Variable") %>%
-  rename(
-    Estimate = Value,
-    SE = Std.Error,
-    DF = DF,
-    t = `t-value`,
-    `p-value` = `p-value`
-  ) %>%
-  mutate(
-    across(where(is.numeric), ~ round(.x, 3))
-  ) %>%
-  mutate(
-    Variable = dplyr::recode(
-      Variable,
-      "(Intercept)" = "Constant",
-      "age" = "Age",
-      "coa1" = "Parental alcoholism",
-      "peer" = "Peer alcohol use",
-      "age:coa1" = "Age × parental alcoholism",
-      "age:peer" = "Age × peer alcohol use",
-      "coa1:peer" = "Parental alcoholism × peer alcohol use",
-      "age:coa1:peer" = "Age × parental alcoholism × peer alcohol use"
-    )
-  )
-
-paper_kable(
-  coef_table,
-  "Fixed effects estimates for the final mixed-effects model"
-)
-
 ```
 
-## Prediction plot
-
-```{r fig.width=7, fig.height=5}
-# compute conditional predicted values from the final model
-condmean <- predict(final_model, level = 1)
-
-# compute the mean peer alcohol use
-peer0 <- mean(alc$peer, na.rm = TRUE)
-
-# create new data for marginal predictions across age and coa
-margdat <- expand.grid(
-  age = sort(unique(alc$age)),
-  coa = levels(alc$coa),
-  peer = peer0
-)
-
-# compute marginal predicted mean alcohol use
-margdat$margmean <- predict(final_model, newdata = margdat, level = 0)
-
-# combine predicted values with the original dataset
-predalc <- as.data.frame(cbind(alc, condmean))
-
-# plot of predicted alcohol use trajectories
-ggplot(
-  predalc,
-  aes(x = age, y = condmean, group = id)
-) +
-  geom_line(aes(color = coa), linetype = 3, alpha = 0.5) +
-  geom_line(
-    data = margdat,
-    aes(x = age, y = margmean, color = coa, group = coa),
-    linewidth = 1.8,
-    inherit.aes = FALSE
-  ) +
-  scale_color_manual(values = coa_cols, labels = c("No", "Yes"), 
-                     name = "Parental alcoholism") +
-  labs(
-    title = "Predicted conditional and marginal mean alcohol-use trajectories",
-    x = "Age",
-    y = "Alcohol use"
-  ) +
-  base_plot_theme
-```
 
 ## Model diagnostic
 
 ```{r, fig.width=8, fig.height=6, warning=FALSE, message=FALSE}
-rhat <- resid(final_model, type = "normalized")
+rhat <- resid(final_model_int_slope, type = "normalized")
 
-condmean <- predict(final_model)
+condmean <- predict(final_model_int_slope)
 y <- alc$alcuse
 stg1r <- y - condmean
 
@@ -594,7 +510,7 @@ p2 <- ggplot(data.frame(rhat = rhat), aes(sample = rhat)) +
   ) +
   base_plot_theme
 
-yhat <- predict(final_model)
+yhat <- predict(final_model_int_slope)
 
 p3 <- ggplot(data.frame(yhat = yhat, rhat = rhat), aes(y = rhat, x = yhat)) +
   geom_point(shape = 1) +
@@ -622,7 +538,7 @@ p4 <- alc %>%
 ```
 
 ```{r, fig.width=8, fig.height=6, warning=FALSE, message=FALSE}
-re <- ranef(final_model) %>%
+re <- ranef(final_model_int_slope) %>%
   rownames_to_column("id")
 
 b0hat <- re$`(Intercept)`
@@ -669,117 +585,149 @@ p4 <- ggplot(data.frame(b1hat = b1hat), aes(x = b1hat)) +
 (p1 + p2) / (p3 + p4)
 ```
 
-# Try the random intercept only model
+The residual plots show some violations, so we tried the second-best model from the random-effects model selection.
+
+# Random intercept only model + AR(1) error
+
+## Fixed effect model selection
+
 ```{r}
-m3 <- lme( # random intercept + AR1 errors model
+m_mean1 <- lme( # mean effect model
+  alcuse ~ age + coa + peer,
+  random = ~ 1 | id,
+  correlation = corAR1(form = ~ age | id),
+  data = alc,
+  method = "ML"
+)
+
+m_mean2 <- lme( # mean effect model with gender
+  alcuse ~ age + coa + peer + male,
+  random = ~ 1 | id,
+  correlation = corAR1(form = ~ age | id),
+  data = alc,
+  method = "ML"
+)
+
+m_mean3 <- lme( # two way interaction model
+  alcuse ~ age + coa + peer + age:coa + age:peer + coa:peer,
+  random = ~ 1 | id,
+  correlation = corAR1(form = ~ age | id),
+  data = alc,
+  method = "ML"
+)
+
+m_mean4 <- lme( # two way interaction model with gender
+  alcuse ~ age + coa + peer + male + age:coa + age:peer + coa:peer + male:age + male:peer + male:coa,
+  random = ~ 1 | id,
+  correlation = corAR1(form = ~ age | id),
+  data = alc,
+  method = "ML"
+)
+
+m_mean5 <- lme( # three way interaction model
+  alcuse ~ age * coa * peer,
+  random = ~ 1 | id,
+  correlation = corAR1(form = ~ age | id),
+  data = alc,
+  method = "ML"
+)
+
+m_mean6 <- lme( # three way interaction model with gender
   alcuse ~ age * coa * peer * male,
   random = ~ 1 | id,
   correlation = corAR1(form = ~ age | id),
   data = alc,
-  method = "REML"
+  method = "ML"
 )
-rhat <- resid(m3, type = "normalized")
+```
 
-condmean <- predict(m3)
-y <- alc$alcuse
-stg1r <- y - condmean
+```{r}
+# without gender model comparison using anova()
+mean_model_compare <- anova(m_mean1, m_mean3, m_mean5) %>% 
+  as.data.frame() %>%
+  mutate(
+    Model = c(
+      "Main effects",
+      "Main effects + two-way interactions",
+      "Main effects + two-way + three-way interaction"
+    )
+  ) %>%
+  select(Model, df, logLik, `L.Ratio`, `p-value`) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 3)))
 
-rtype <- c(rep("Raw", length(stg1r)), rep("Standardized", length(stg1r)))
-resid <- c(stg1r, rhat)
+rownames(mean_model_compare) <- NULL
 
-stg1resids <- data.frame(
-  rtype = rtype,
-  resid = as.numeric(resid)
+# writing the model output into a table
+paper_kable(
+  mean_model_compare,
+  "Likelihood ratio tests for fixed-effects structure selection without gender"
 )
+```
 
-p1 <- ggplot(stg1resids, aes(x = resid, fill = rtype)) +
-  geom_histogram(position = "identity", alpha = 0.5, bins = 50) +
-  labs(
-    title = "Histogram of raw and standardized residuals",
-    y = "Count",
-    x = "Residuals",
-    fill = NULL
-  ) +
-  theme(
-    legend.position = c(0.78, 0.78)
-  ) +
-  base_plot_theme
+For without gender, three way interaction is the best.
 
-p2 <- ggplot(data.frame(rhat = rhat), aes(sample = rhat)) +
-  stat_qq(shape = 1) +
-  stat_qq_line(color = "steelblue", linewidth = 1) +
-  labs(
-    title = "Normal Q-Q plot of standardized residuals",
-    x = "Theoretical quantiles",
-    y = "Sample quantiles"
-  ) +
-  base_plot_theme
+```{r}
+# with gender model comprison using anova()
+mean_model_compare <- anova(m_mean2, m_mean4, m_mean6) %>% 
+  as.data.frame() %>%
+  mutate(
+    Model = c(
+      "Main effects",
+      "Main effects + two-way interactions",
+      "Main effects + two-way + three-way interaction"
+    )
+  ) %>%
+  select(Model, df, logLik, `L.Ratio`, `p-value`) %>%
+  mutate(across(where(is.numeric), ~ round(.x, 3)))
 
-yhat <- predict(final_model)
+rownames(mean_model_compare) <- NULL
 
-p3 <- ggplot(data.frame(yhat = yhat, rhat = rhat), aes(y = rhat, x = yhat)) +
-  geom_point(shape = 1) +
-  labs(
-    title = "Standardized residuals versus predicted mean",
-    x = "Predicted mean",
-    y = "Standardized residual"
-  ) +
-  base_plot_theme
+# writing the model output into a table
+paper_kable(
+  mean_model_compare,
+  "Likelihood ratio tests for fixed-effects structure selection with gender"
+)
+```
 
-p4 <- alc %>%
-  mutate(rhat = rhat) %>%
-  group_by(id) %>%
-  mutate(rhat1 = lag(rhat)) %>%
-  ggplot(aes(y = rhat, x = rhat1)) +
-  geom_point(color = "brown", na.rm = TRUE) +
-  labs(
-    title = "Lagged residual plot",
-    y = "Standardized residual",
-    x = "Lagged standardized residual"
-  ) +
-  base_plot_theme
+For with gender, two way interaction is the best.
 
-(p1 + p2) / (p3 + p4)
+```{r}
+# AIC and BIC to compare the two models
+mean_table <- tibble(
+  `Model` = c(
+    "Two-way interactions + gender",
+    "Three-way interaction"
+  ),
+  AIC = c(
+    AIC(m_mean4), AIC(m_mean5)
+  ),
+  BIC = c(
+    BIC(m_mean4), BIC(m_mean5)
+  )
+) %>%
+  mutate(
+    AIC = round(AIC, 3),
+    BIC = round(BIC, 3)
+  )
 
-re <- ranef(m3) %>%
-  rownames_to_column("id")
+paper_kable(mean_table, "Model Comparison")
+```
 
-b0hat <- re$`(Intercept)`
+Three way interaction without gender is the best model.
 
-p1 <- ggplot(data.frame(b0hat = b0hat), aes(sample = b0hat)) +
-  stat_qq(shape = 1) +
-  stat_qq_line(color = "steelblue", linewidth = 1) +
-  labs(
-    title = "Normal Q-Q plot of random intercepts",
-    x = "Theoretical quantiles",
-    y = "Sample quantiles"
-  ) +
-  base_plot_theme
+## Model Diagnostic
 
-p3 <- ggplot(data.frame(b0hat = b0hat), aes(x = b0hat)) +
-  geom_histogram(position = "identity", alpha = 0.5, bins = 50, fill = "orange") +
-  labs(
-    title = "Histogram of random intercepts",
-    x = "Estimates",
-    y = "Count"
-  ) +
-  base_plot_theme
-
-
-(p1 + p3)
-
-
-
-m4 <- lme( # random intercept + exp errors model
-  alcuse ~ age * coa * peer * male,
+```{r, fig.width=8, fig.height=6, warning=FALSE, message=FALSE}
+final_model_ar1 <- lme( # three way interaction model
+  alcuse ~ age * coa * peer,
   random = ~ 1 | id,
-  correlation = corExp(form = ~ age | id),
+  correlation = corAR1(form = ~ age | id),
   data = alc,
-  method = "REML"
+  method = "ML"
 )
-rhat <- resid(m4, type = "normalized")
+rhat <- resid(final_model_ar1, type = "normalized")
 
-condmean <- predict(m4)
+condmean <- predict(final_model_ar1)
 y <- alc$alcuse
 stg1r <- y - condmean
 
@@ -790,6 +738,7 @@ stg1resids <- data.frame(
   rtype = rtype,
   resid = as.numeric(resid)
 )
+
 p1 <- ggplot(stg1resids, aes(x = resid, fill = rtype)) +
   geom_histogram(position = "identity", alpha = 0.5, bins = 50) +
   labs(
@@ -813,7 +762,7 @@ p2 <- ggplot(data.frame(rhat = rhat), aes(sample = rhat)) +
   ) +
   base_plot_theme
 
-yhat <- predict(final_model)
+yhat <- predict(final_model_ar1)
 
 p3 <- ggplot(data.frame(yhat = yhat, rhat = rhat), aes(y = rhat, x = yhat)) +
   geom_point(shape = 1) +
@@ -839,7 +788,7 @@ p4 <- alc %>%
 
 (p1 + p2) / (p3 + p4)
 
-re <- ranef(m4) %>%
+re <- ranef(final_model_ar1) %>%
   rownames_to_column("id")
 
 b0hat <- re$`(Intercept)`
@@ -862,7 +811,100 @@ p3 <- ggplot(data.frame(b0hat = b0hat), aes(x = b0hat)) +
     y = "Count"
   ) +
   base_plot_theme
+
 
 (p1 + p3)
 ```
+
+## Model interpretation
+
+```{r}
+# print the result of the chosen model: three way interaction model
+coef_table <- summary(final_model_ar1)$tTable %>%
+  as.data.frame() %>%
+  rownames_to_column("Variable") %>%
+  rename(
+    Estimate = Value,
+    SE = Std.Error,
+    DF = DF,
+    `p-value` = `p-value`
+  ) %>%
+  mutate(
+    `95% CI` = paste0(
+      "(",
+      round(Estimate - 1.96 * SE, 3),
+      ", ",
+      round(Estimate + 1.96 * SE, 3),
+      ")"
+    )
+  ) %>%
+  mutate(
+    across(c(Estimate, SE, DF, `p-value`), ~ round(.x, 3))
+  ) %>%
+  mutate(
+    Variable = dplyr::recode(
+      Variable,
+      "(Intercept)" = "Constant",
+      "age" = "Age",
+      "coa1" = "Parental alcoholism",
+      "peer" = "Peer alcohol use",
+      "age:coa1" = "Age × parental alcoholism",
+      "age:peer" = "Age × peer alcohol use",
+      "coa1:peer" = "Parental alcoholism × peer alcohol use",
+      "age:coa1:peer" = "Age × parental alcoholism × peer alcohol use"
+    )
+  ) %>%
+  select(Variable, Estimate, SE, `95% CI`, `p-value`)
+
+paper_kable(
+  coef_table,
+  "Fixed effects estimates for the final mixed-effects model"
+)
+
+```
+
+## Prediction plot
+
+```{r fig.width=7, fig.height=5}
+# compute conditional predicted values from the final model
+condmean <- predict(final_model_ar1, level = 1)
+
+# compute the mean peer alcohol use
+peer0 <- mean(alc$peer, na.rm = TRUE)
+
+# create new data for marginal predictions across age and coa
+margdat <- expand.grid(
+  age = sort(unique(alc$age)),
+  coa = levels(alc$coa),
+  peer = peer0
+)
+
+# compute marginal predicted mean alcohol use
+margdat$margmean <- predict(final_model_ar1, newdata = margdat, level = 0)
+
+# combine predicted values with the original dataset
+predalc <- as.data.frame(cbind(alc, condmean))
+
+# plot of predicted alcohol use trajectories
+ggplot(
+  predalc,
+  aes(x = age, y = condmean, group = id)
+) +
+  geom_line(aes(color = coa), linetype = 3, alpha = 0.5) +
+  geom_line(
+    data = margdat,
+    aes(x = age, y = margmean, color = coa, group = coa),
+    linewidth = 1.8,
+    inherit.aes = FALSE
+  ) +
+  scale_color_manual(values = coa_cols, labels = c("No", "Yes"), 
+                     name = "Parental alcoholism") +
+  labs(
+    title = "Predicted conditional and marginal mean alcohol-use trajectories",
+    x = "Age",
+    y = "Alcohol use"
+  ) +
+  base_plot_theme
+```
+
 
