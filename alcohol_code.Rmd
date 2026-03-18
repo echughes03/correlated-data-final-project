@@ -42,9 +42,10 @@ male_labs <- c(
 )
 
 coa_cols <- c(
-  "0" = "#F8766D",
-  "1" = "#00BFC4"
+  "0" = "#d62728",
+  "1" = "#1f77b4"
 )
+
 
 base_plot_theme <- theme(
   plot.title = element_text(size = 11, face = "bold"),
