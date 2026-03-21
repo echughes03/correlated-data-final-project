@@ -1,4 +1,4 @@
-This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.9.1)  20 MAR 2026 22:42
+This is XeTeX, Version 3.141592653-2.6-0.999996 (TeX Live 2024) (preloaded format=xelatex 2024.9.1)  20 MAR 2026 22:53
 entering extended mode
  restricted \write18 enabled.
  %&-line parsing enabled.
@@ -913,44 +913,70 @@ Underfull \vbox (badness 1028) detected at line 610
 [9]
 
 [10]
+Overfull \hbox (3.37498pt too wide) in paragraph at lines 727--739
+ [][] 
+ []
+
+
 
 [11]
+Overfull \vbox (1.34286pt too high) detected at line 844
+ []
+
+
 
 [12]
 File: alcohol_code_files/figure-latex/unnamed-chunk-13-1.pdf Graphic file (type pdf)
 <use alcohol_code_files/figure-latex/unnamed-chunk-13-1.pdf>
 
-Overfull \vbox (1.12535pt too high) detected at line 871
+
+[13]
+Underfull \vbox (badness 10000) detected at line 896
  []
 
 
 
-[13]
+[14]
 File: alcohol_code_files/figure-latex/unnamed-chunk-14-1.pdf Graphic file (type pdf)
 <use alcohol_code_files/figure-latex/unnamed-chunk-14-1.pdf>
 
 
-[14]
-
 [15]
-
-LaTeX Warning: `!h' float specifier changed to `!ht'.
+Underfull \vbox (badness 10000) detected at line 984
+ []
 
 
 
 [16]
 
+LaTeX Warning: `!h' float specifier changed to `!ht'.
+
+
+
 [17]
 
 [18]
+Overfull \hbox (3.37498pt too wide) in paragraph at lines 1151--1163
+ [][] 
+ []
+
+
 
 [19]
-File: alcohol_code_files/figure-latex/unnamed-chunk-20-1.pdf Graphic file (type pdf)
-<use alcohol_code_files/figure-latex/unnamed-chunk-20-1.pdf>
+Underfull \vbox (badness 10000) detected at line 1242
+ []
+
+
+Underfull \vbox (badness 10000) detected at line 1242
+ []
+
 
 
 [20]
-Underfull \vbox (badness 10000) detected at line 1249
+File: alcohol_code_files/figure-latex/unnamed-chunk-20-1.pdf Graphic file (type pdf)
+<use alcohol_code_files/figure-latex/unnamed-chunk-20-1.pdf>
+
+Overfull \vbox (1.20535pt too high) detected at line 1275
  []
 
 

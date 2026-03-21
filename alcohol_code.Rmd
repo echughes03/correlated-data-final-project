@@ -396,7 +396,7 @@ mean_model_compare <- anova(m_mean1, m_mean3, m_mean5) %>%
     Model = c(
       "1. Main effects",
       "2. Main effects + two-way interactions",
-      "3. Main effects + two-way + three-way interaction"
+      "3. Main effects + two-way + three-way interactions"
     )
   ) %>%
   select(Model, df, logLik, `L.Ratio`, `p-value`, `Test`) %>%
@@ -421,7 +421,7 @@ mean_model_compare <- anova(m_mean2, m_mean4, m_mean6) %>%
     Model = c(
       "1. Main effects",
       "2. Main effects + two-way interactions",
-      "3. Main effects + two-way + three-way interaction"
+      "3. Main effects + two-way + three-way interactions"
     )
   ) %>%
   select(Model, df, logLik, `L.Ratio`, `p-value`, `Test`) %>%
@@ -443,7 +443,7 @@ For with gender, two way interaction is the best.
 mean_table <- tibble(
   `Model` = c(
     "Two-way interactions + gender",
-    "Three-way interaction"
+    "Three-way interactions"
   ),
   AIC = c(
     AIC(m_mean4), AIC(m_mean5)
@@ -476,7 +476,7 @@ mean_model_compare_all <- bind_rows(
     Model = c(
       "1. Main effects (no gender)",
       "2. Two-way interactions (no gender)",
-      "3. Three-way interaction (no gender)"
+      "3. Three-way interactions (no gender)"
     ),
     Test = c("", "1 vs 2", "2 vs 3"),
     df = lrt_no_gender$df,
@@ -490,7 +490,7 @@ mean_model_compare_all <- bind_rows(
     Model = c(
       "4. Main effects (with gender)",
       "5. Two-way interactions (with gender)",
-      "6. Three-way interaction (with gender)"
+      "6. Three-way interactions (with gender)"
     ),
     Test = c("", "4 vs 5", "5 vs 6"),
     df = lrt_with_gender$df,
@@ -712,7 +712,7 @@ mean_model_compare <- anova(m_mean1, m_mean3, m_mean5) %>%
     Model = c(
       "1. Main effects",
       "2. Main effects + two-way interactions",
-      "3. Main effects + two-way + three-way interaction"
+      "3. Main effects + two-way + three-way interactions"
     )
   ) %>%
   select(Model, df, logLik, `L.Ratio`, `p-value`, `Test`) %>%
@@ -728,7 +728,7 @@ paper_kable(
 # we can see that the two way interaction shows no improvement to the main effect model
 # but the three way interaction shows evidence against H0
 # anova(m_mean1, m_mean5) shows p-value < 0.05
-# provides further evidence that three-way interaction is the best model
+# provides further evidence that three-way interactions is the best model
 ```
 
 For without gender, three way interaction is the best.
@@ -741,7 +741,7 @@ mean_model_compare <- anova(m_mean2, m_mean4, m_mean6) %>%
     Model = c(
       "1. Main effects",
       "2. Main effects + two-way interactions",
-      "3. Main effects + two-way + three-way interaction"
+      "3. Main effects + two-way + three-way interactions"
     )
   ) %>%
   select(Model, df, logLik, `L.Ratio`, `p-value`, `Test`) %>%
@@ -763,7 +763,7 @@ For with gender, two way interaction is the best.
 mean_table <- tibble(
   `Model` = c(
     "Two-way interactions + gender",
-    "Three-way interaction"
+    "Three-way interactions"
   ),
   AIC = c(
     AIC(m_mean4), AIC(m_mean5)
@@ -794,7 +794,7 @@ mean_model_compare_all <- bind_rows(
     Model = c(
       "1. Main effects (no gender)",
       "2. Two-way interactions (no gender)",
-      "3. Three-way interaction (no gender)"
+      "3. Three-way interactions (no gender)"
     ),
     Test = c("", "1 vs 2", "2 vs 3"),
     df = lrt_no_gender$df,
@@ -808,7 +808,7 @@ mean_model_compare_all <- bind_rows(
     Model = c(
       "4. Main effects (with gender)",
       "5. Two-way interactions (with gender)",
-      "6. Three-way interaction (with gender)"
+      "6. Three-way interactions (with gender)"
     ),
     Test = c("", "4 vs 5", "5 vs 6"),
     df = lrt_with_gender$df,
