@@ -204,7 +204,7 @@ paper_kable(missing_table, "Missing data summary by age")
 
 ```{r fig.width=8, fig.height=8}
 # creating plots to visualize relations
-p_box_age <- ggplot(alc, aes(x = coa, y = alcuse, fill = coa)) +
+p_box_age <- ggplot(alc, aes(x = coa, y = alcuse, fill = coa)) + # boxplot
   geom_boxplot(alpha = 0.75, show.legend = FALSE) +
   facet_wrap(~ age) +
   scale_fill_manual(values = coa_cols) +
@@ -215,7 +215,7 @@ p_box_age <- ggplot(alc, aes(x = coa, y = alcuse, fill = coa)) +
   ) +
   base_plot_theme
 
-p_peer_age <- ggplot(alc, aes(x = peer, y = alcuse)) +
+p_peer_age <- ggplot(alc, aes(x = peer, y = alcuse)) + # scatterplot
   geom_point(alpha = 0.6, size = 2, color = "grey35") +
   geom_smooth(method = "lm", se = FALSE, linewidth = 0.9, color = "steelblue") +
   facet_wrap(~ age) +
@@ -226,7 +226,7 @@ p_peer_age <- ggplot(alc, aes(x = peer, y = alcuse)) +
   ) +
   base_plot_theme
 
-p_peer_age_coa <- ggplot(alc, aes(x = peer, y = alcuse, color = coa)) +
+p_peer_age_coa <- ggplot(alc, aes(x = peer, y = alcuse, color = coa)) + # scatterplot by coa
   geom_point(alpha = 0.8, size = 2) +
   geom_smooth(method = "lm", se = FALSE, linewidth = 0.9) +
   facet_wrap(~ age) +
@@ -279,22 +279,24 @@ ggplot(alc, aes(x = age, y = alcuse, group = id, color = coa)) +
 ## Model comparison
 
 ```{r}
+# we choose the use linear mixed effect model since we are interested in individual trajectories
+# we use the full model to choose the covariance structure
 m1 <- lme( # random intercept + ind errors model
-  alcuse ~ age * coa * peer * male,
+  alcuse ~ age * coa * peer + male,
   random = ~ 1 | id,
   data = alc,
   method = "REML"
 )
 
 m2 <- lme( # random intercept and slopes + ind errors model
-  alcuse ~ age * coa * peer * male,
+  alcuse ~ age * coa * peer + male,
   random = ~ age | id,
   data = alc,
   method = "REML"
 )
 
 m3 <- lme( # random intercept + AR1 errors model
-  alcuse ~ age * coa * peer * male,
+  alcuse ~ age * coa * peer + male,
   random = ~ 1 | id,
   correlation = corAR1(form = ~ age | id),
   data = alc,
@@ -303,7 +305,7 @@ m3 <- lme( # random intercept + AR1 errors model
 
 
 m4 <- lme( # random intercept + heteroske ind errors (age) model
-  alcuse ~ age * coa * peer * male,
+  alcuse ~ age * coa * peer + male,
   random = ~ 1 | id,
   weights = varIdent(form = ~ 1 | age),
   data = alc,
@@ -311,7 +313,7 @@ m4 <- lme( # random intercept + heteroske ind errors (age) model
 )
 
 m5 <- lme( # random intercept + heteroske ind errors (gender) model
-  alcuse ~ age * coa * peer * male,
+  alcuse ~ age * coa * peer + male,
   random = ~ 1 | id,
   weights = varIdent(form = ~ 1 | male),
   data = alc,
@@ -337,21 +339,21 @@ cov_table <- tibble(
 paper_kable(cov_table, "Comparison of covariance structures")
 ```
 
-Random intercept and slope model is the best.
+Random intercept and slope model has the lowest AIC and BIC.
 
 # Random intercept and slope model
 
 ## Fixed effect model selection
 
 ```{r}
-m_mean1 <- lme( # mean effect model
+m_mean1 <- lme( # main effect model
   alcuse ~ age + coa + peer,
   random = ~ age | id,
   data = alc,
   method = "ML"
 )
 
-m_mean2 <- lme( # mean effect model with gender
+m_mean2 <- lme( # main effect model with gender
   alcuse ~ age + coa + peer + male,
   random = ~ age | id,
   data = alc,
@@ -393,12 +395,12 @@ mean_model_compare <- anova(m_mean1, m_mean3, m_mean5) %>%
   as.data.frame() %>%
   mutate(
     Model = c(
-      "Main effects",
-      "Main effects + two-way interactions",
-      "Main effects + two-way + three-way interaction"
+      "1. Main effects",
+      "2. Main effects + two-way interactions",
+      "3. Main effects + two-way + three-way interactions"
     )
   ) %>%
-  select(Model, df, logLik, `L.Ratio`, `p-value`) %>%
+  select(Model, df, logLik, `L.Ratio`, `p-value`, `Test`) %>%
   mutate(across(where(is.numeric), ~ round(.x, 3)))
 
 rownames(mean_model_compare) <- NULL
@@ -413,17 +415,17 @@ paper_kable(
 For without gender, three way interaction is the best.
 
 ```{r}
-# with gender model comprison using anova()
+# with gender model comparison using anova()
 mean_model_compare <- anova(m_mean2, m_mean4, m_mean6) %>% 
   as.data.frame() %>%
   mutate(
     Model = c(
-      "Main effects",
-      "Main effects + two-way interactions",
-      "Main effects + two-way + three-way interaction"
+      "1. Main effects",
+      "2. Main effects + two-way interactions",
+      "3. Main effects + two-way + three-way interactions"
     )
   ) %>%
-  select(Model, df, logLik, `L.Ratio`, `p-value`) %>%
+  select(Model, df, logLik, `L.Ratio`, `p-value`, `Test`) %>%
   mutate(across(where(is.numeric), ~ round(.x, 3)))
 
 rownames(mean_model_compare) <- NULL
@@ -442,7 +444,7 @@ For with gender, two way interaction is the best.
 mean_table <- tibble(
   `Model` = c(
     "Two-way interactions + gender",
-    "Three-way interaction"
+    "Three-way interactions"
   ),
   AIC = c(
     AIC(m_mean4), AIC(m_mean5)
@@ -460,6 +462,56 @@ paper_kable(mean_table, "Model Comparison")
 ```
 
 Three way interaction without gender is the best.
+
+```{r}
+# likelihood ratio tests
+lrt_no_gender <- anova(m_mean1, m_mean3, m_mean5) %>%
+  as.data.frame()
+
+lrt_with_gender <- anova(m_mean2, m_mean4, m_mean6) %>%
+  as.data.frame()
+
+# one combined table
+mean_model_compare_all <- bind_rows(
+  tibble(
+    Model = c(
+      "1. Main effects (no gender)",
+      "2. Two-way interactions (no gender)",
+      "3. Three-way interactions (no gender)"
+    ),
+    Test = c("", "1 vs 2", "2 vs 3"),
+    df = lrt_no_gender$df,
+    logLik = lrt_no_gender$logLik,
+    `L.Ratio` = lrt_no_gender$`L.Ratio`,
+    `p-value` = lrt_no_gender$`p-value`,
+    AIC = c(AIC(m_mean1), AIC(m_mean3), AIC(m_mean5)),
+    BIC = c(BIC(m_mean1), BIC(m_mean3), BIC(m_mean5))
+  ),
+  tibble(
+    Model = c(
+      "4. Main effects (with gender)",
+      "5. Two-way interactions (with gender)",
+      "6. Three-way interactions (with gender)"
+    ),
+    Test = c("", "4 vs 5", "5 vs 6"),
+    df = lrt_with_gender$df,
+    logLik = lrt_with_gender$logLik,
+    `L.Ratio` = lrt_with_gender$`L.Ratio`,
+    `p-value` = lrt_with_gender$`p-value`,
+    AIC = c(AIC(m_mean2), AIC(m_mean4), AIC(m_mean6)),
+    BIC = c(BIC(m_mean2), BIC(m_mean4), BIC(m_mean6))
+  )
+) %>%
+  mutate(
+    across(c(logLik, `L.Ratio`, `p-value`, AIC, BIC), ~ round(.x, 3))
+  )
+
+paper_kable(
+  mean_model_compare_all,
+  "Likelihood ratio tests and information criteria for fixed-effects structure selection."
+)
+```
+
 
 ```{r}
 final_model_int_slope <- lme( # three way interaction model
@@ -597,7 +649,7 @@ p4 <- ggplot(data.frame(b1hat = b1hat), aes(x = b1hat)) +
 (p1 + p2) / (p3 + p4)
 ```
 
-The residual plots show some violations, so we tried the second-best model from the random-effects model selection.
+The residual plots show some violations, so we tried the second best model from the random-effects model selection.
 
 # Random intercept only model + AR(1) error
 
@@ -659,12 +711,12 @@ mean_model_compare <- anova(m_mean1, m_mean3, m_mean5) %>%
   as.data.frame() %>%
   mutate(
     Model = c(
-      "Main effects",
-      "Main effects + two-way interactions",
-      "Main effects + two-way + three-way interaction"
+      "1. Main effects",
+      "2. Main effects + two-way interactions",
+      "3. Main effects + two-way + three-way interactions"
     )
   ) %>%
-  select(Model, df, logLik, `L.Ratio`, `p-value`) %>%
+  select(Model, df, logLik, `L.Ratio`, `p-value`, `Test`) %>%
   mutate(across(where(is.numeric), ~ round(.x, 3)))
 
 rownames(mean_model_compare) <- NULL
@@ -674,6 +726,10 @@ paper_kable(
   mean_model_compare,
   "Likelihood ratio tests for fixed-effects structure selection without gender"
 )
+# we can see that the two way interaction shows no improvement to the main effect model
+# but the three way interaction shows evidence against H0
+# anova(m_mean1, m_mean5) shows p-value < 0.05
+# provides further evidence that three-way interactions is the best model
 ```
 
 For without gender, three way interaction is the best.
@@ -684,12 +740,12 @@ mean_model_compare <- anova(m_mean2, m_mean4, m_mean6) %>%
   as.data.frame() %>%
   mutate(
     Model = c(
-      "Main effects",
-      "Main effects + two-way interactions",
-      "Main effects + two-way + three-way interaction"
+      "1. Main effects",
+      "2. Main effects + two-way interactions",
+      "3. Main effects + two-way + three-way interactions"
     )
   ) %>%
-  select(Model, df, logLik, `L.Ratio`, `p-value`) %>%
+  select(Model, df, logLik, `L.Ratio`, `p-value`, `Test`) %>%
   mutate(across(where(is.numeric), ~ round(.x, 3)))
 
 rownames(mean_model_compare) <- NULL
@@ -708,7 +764,7 @@ For with gender, two way interaction is the best.
 mean_table <- tibble(
   `Model` = c(
     "Two-way interactions + gender",
-    "Three-way interaction"
+    "Three-way interactions"
   ),
   AIC = c(
     AIC(m_mean4), AIC(m_mean5)
@@ -724,6 +780,56 @@ mean_table <- tibble(
 
 paper_kable(mean_table, "Model Comparison")
 ```
+
+```{r}
+# likelihood ratio tests
+lrt_no_gender <- anova(m_mean1, m_mean3, m_mean5) %>%
+  as.data.frame()
+
+lrt_with_gender <- anova(m_mean2, m_mean4, m_mean6) %>%
+  as.data.frame()
+
+# one combined table
+mean_model_compare_all <- bind_rows(
+  tibble(
+    Model = c(
+      "1. Main effects (no gender)",
+      "2. Two-way interactions (no gender)",
+      "3. Three-way interactions (no gender)"
+    ),
+    Test = c("", "1 vs 2", "2 vs 3"),
+    df = lrt_no_gender$df,
+    logLik = lrt_no_gender$logLik,
+    `L.Ratio` = lrt_no_gender$`L.Ratio`,
+    `p-value` = lrt_no_gender$`p-value`,
+    AIC = c(AIC(m_mean1), AIC(m_mean3), AIC(m_mean5)),
+    BIC = c(BIC(m_mean1), BIC(m_mean3), BIC(m_mean5))
+  ),
+  tibble(
+    Model = c(
+      "4. Main effects (with gender)",
+      "5. Two-way interactions (with gender)",
+      "6. Three-way interactions (with gender)"
+    ),
+    Test = c("", "4 vs 5", "5 vs 6"),
+    df = lrt_with_gender$df,
+    logLik = lrt_with_gender$logLik,
+    `L.Ratio` = lrt_with_gender$`L.Ratio`,
+    `p-value` = lrt_with_gender$`p-value`,
+    AIC = c(AIC(m_mean2), AIC(m_mean4), AIC(m_mean6)),
+    BIC = c(BIC(m_mean2), BIC(m_mean4), BIC(m_mean6))
+  )
+) %>%
+  mutate(
+    across(c(logLik, `L.Ratio`, `p-value`, AIC, BIC), ~ round(.x, 3))
+  )
+
+paper_kable(
+  mean_model_compare_all,
+  "Likelihood ratio tests and information criteria for fixed-effects structure selection."
+)
+```
+
 
 Three way interaction without gender is the best model.
 
