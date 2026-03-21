@@ -281,21 +281,21 @@ ggplot(alc, aes(x = age, y = alcuse, group = id, color = coa)) +
 # we choose the use linear mixed effect model since we are interested in individual trajectories
 # we use the full model to choose the covariance structure
 m1 <- lme( # random intercept + ind errors model
-  alcuse ~ age * coa * peer * male,
+  alcuse ~ age * coa * peer + male,
   random = ~ 1 | id,
   data = alc,
   method = "REML"
 )
 
 m2 <- lme( # random intercept and slopes + ind errors model
-  alcuse ~ age * coa * peer * male,
+  alcuse ~ age * coa * peer + male,
   random = ~ age | id,
   data = alc,
   method = "REML"
 )
 
 m3 <- lme( # random intercept + AR1 errors model
-  alcuse ~ age * coa * peer * male,
+  alcuse ~ age * coa * peer + male,
   random = ~ 1 | id,
   correlation = corAR1(form = ~ age | id),
   data = alc,
@@ -304,7 +304,7 @@ m3 <- lme( # random intercept + AR1 errors model
 
 
 m4 <- lme( # random intercept + heteroske ind errors (age) model
-  alcuse ~ age * coa * peer * male,
+  alcuse ~ age * coa * peer + male,
   random = ~ 1 | id,
   weights = varIdent(form = ~ 1 | age),
   data = alc,
@@ -312,7 +312,7 @@ m4 <- lme( # random intercept + heteroske ind errors (age) model
 )
 
 m5 <- lme( # random intercept + heteroske ind errors (gender) model
-  alcuse ~ age * coa * peer * male,
+  alcuse ~ age * coa * peer + male,
   random = ~ 1 | id,
   weights = varIdent(form = ~ 1 | male),
   data = alc,
