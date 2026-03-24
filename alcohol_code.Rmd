@@ -373,6 +373,12 @@ m_mean4 <- lme( # two way interaction model with gender
   data = alc,
   method = "ML"
 )
+m_mean4 <- lme( # two way interaction model with gender
+  alcuse ~ age + coa + peer + male + age:coa + age:peer + coa:peer,
+  random = ~ age | id,
+  data = alc,
+  method = "ML"
+)
 
 m_mean5 <- lme( # three way interaction model
   alcuse ~ age * coa * peer,
@@ -381,8 +387,16 @@ m_mean5 <- lme( # three way interaction model
   method = "ML"
 )
 
+
 m_mean6 <- lme( # three way interaction model with gender
   alcuse ~ age * coa * peer * male,
+  random = ~ age | id,
+  data = alc,
+  method = "ML"
+)
+
+m_mean6 <- lme( # three way interaction model with gender
+  alcuse ~ age * coa * peer + male,
   random = ~ age | id,
   data = alc,
   method = "ML"
@@ -703,6 +717,31 @@ m_mean6 <- lme( # three way interaction model with gender
   data = alc,
   method = "ML"
 )
+
+
+
+## Do gender just as main effect
+
+
+m_mean4a <- lme( # two way interaction model with gender
+  alcuse ~ age + coa + peer + male + age:coa + age:peer + coa:peer,
+  random = ~ 1 | id,
+  correlation = corAR1(form = ~ age | id),
+  data = alc,
+  method = "ML"
+)
+
+m_mean6a <- lme( # three way interaction model with gender
+  alcuse ~ age * coa * peer + male,
+  random = ~ 1 | id,
+  correlation = corAR1(form = ~ age | id),
+  data = alc,
+  method = "ML"
+)
+
+anova(m_mean2, m_mean4a, m_mean6a)
+
+anova(m_mean2, m_mean6a) # marginally significant
 ```
 
 ```{r}
