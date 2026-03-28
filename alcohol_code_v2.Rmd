@@ -987,3 +987,43 @@ save_plot_png(fig7, "residual_figure7.png", 16, 8)
 save_plot_png(fig8, "residual_figure8.png", 14, 7)
 ```
 
+```{r}
+
+final_model_ar1 <- lme( # three way interaction model
+  alcuse ~ age * coa * peer,
+  random = ~ 1 | id,
+  correlation = corAR1(form = ~ age | id),
+  data = alc,
+  method = "ML"
+)
+# get mean and SD of peer use from your data
+peer_mean <- mean(alc$peer, na.rm = TRUE)
+peer_sd   <- sd(alc$peer, na.rm = TRUE)
+
+newdat <- expand.grid(
+  age = seq(14, 16, by = 0.1),
+  coa = c(0, 1),
+  peer = c(peer_mean - peer_sd, peer_mean + peer_sd)
+)
+newdat$pred <- predict(final_model_ar1, newdata = newdat, level=0)
+newdat <- newdat %>%
+  mutate(
+    COA = factor(coa, labels = c("Non-COA", "COA")),
+    peer_group = factor(peer,
+      labels = c("Low peer use", "High peer use")
+    )
+  )
+
+ggplot(newdat, aes(x = age, y = pred,
+                   color = peer_group,
+                   linetype = COA)) +
+  geom_line(size = 1.2) +
+  labs(x = "Age",
+    y = "Predicted alcohol use",
+    color = "Peer use",
+    linetype = "COA status",
+    title="Figure 6: Predicted Alcohol Use Trajectories by COA Status and Peer Use Category", caption="Low peer alcohol use = 0.29, high peer alcohol use = 1.74") +
+  base_plot_theme +
+  theme(    plot.title = element_text(size = 12, hjust = 0.5))
+
+```
