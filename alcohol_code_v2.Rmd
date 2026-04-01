@@ -515,10 +515,10 @@ mean_model_compare_all <- bind_rows(
     across(c(logLik, `L.Ratio`, `p-value`, AIC, BIC), ~ round(.x, 3))
   )
 
-paper_kable(
-  mean_model_compare_all,
-  "Fixed-effects structure selection under random intercept and slope model"
-)
+# paper_kable(
+#   mean_model_compare_all,
+#   "Fixed-effects structure selection under random intercept and slope model"
+# )
 ```
 
 
