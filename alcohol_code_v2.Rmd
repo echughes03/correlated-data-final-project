@@ -905,7 +905,6 @@ figA2
 ## Model interpretation
 
 ```{r, echo=FALSE}
-# extract the coefficient table from the final model
 # create a coefficient table for the final model
 coef_table <- summary(final_model_ar1)$tTable %>%
   as.data.frame() %>%
